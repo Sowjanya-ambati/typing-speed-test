@@ -1,81 +1,83 @@
 const quotes = [
-  "Practice makes perfect",
-  "Typing is a useful skill",
-  "JavaScript is fun",
-  "Stay focused and keep coding"
+  "The quick brown fox jumps over the lazy dog",
+  "Typing fast requires practice and patience",
+  "JavaScript makes websites interactive and fun",
+  "Speed and accuracy are important in typing tests"
 ];
-let quoteEl = document.getElementById("quote");
-let inputEl = document.getElementById("input");
-let timeEl = document.getElementById("time");
-let wpmEl = document.getElementById("wpm");
-let accuracyEl = document.getElementById("accuracy");
-let errorsEl = document.getElementById("errors");
-let startBtn = document.getElementById("startBtn");
-let restartBtn = document.getElementById("restartBtn");
-let timeLeft = 60;
-let timer = null;
-let errors = 0;
-let totalTyped = 0;
-let correctTyped = 0;
-let currentQuote = "";
-function loadQuote() {
-  currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
-  quoteEl.innerHTML = currentQuote;
-}
-function startGame() {
-  resetGame();
-  loadQuote();
-  inputEl.disabled = false;
-  inputEl.value = "";
-  inputEl.focus();
 
-  timer = setInterval(() => {
-    timeLeft--;
-    timeEl.textContent = timeLeft;
-    if (timeLeft <= 0) finishGame();
-  }, 1000);
-}
-function resetGame() {
-  clearInterval(timer);
-  timeLeft = 60;
-  errors = 0;
-  totalTyped = 0;
-  correctTyped = 0;
-  timeEl.textContent = 60;
+let timer = 0;
+let interval = null;
+let currentQuote = "";
+let isTestRunning = false;
+
+const quoteEl = document.getElementById("quote");
+const inputEl = document.getElementById("input");
+const timeEl = document.getElementById("time");
+const wpmEl = document.getElementById("wpm");
+const accuracyEl = document.getElementById("accuracy");
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+// Start test
+startBtn.addEventListener("click", () => {
+  if (isTestRunning) return;
+  
+  currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  quoteEl.textContent = currentQuote;
+  
+  inputEl.value = "";
+  inputEl.disabled = false;
+  inputEl.focus();
+  
+  timer = 0;
+  timeEl.textContent = timer;
   wpmEl.textContent = 0;
   accuracyEl.textContent = 0;
-  errorsEl.textContent = 0;
-}
-inputEl.addEventListener("input", () => {
-  let typedText = inputEl.value;
-  totalTyped++;
-
-  if (typedText === currentQuote.substring(0, typedText.length)) {
-    correctTyped++;
-  } else {
-    errors++;
-    errorsEl.textContent = errors;
-  }
-
-  // WPM = (correct characters / 5) / minutes
-  let minutes = (60 - timeLeft) / 60;
-  if (minutes > 0) {
-    let wpm = ((correctTyped / 5) / minutes).toFixed(2);
-    wpmEl.textContent = wpm;
-  }
-
-  let accuracy = ((correctTyped / totalTyped) * 100).toFixed(2);
-  accuracyEl.textContent = accuracy;
+  
+  isTestRunning = true;
+  interval = setInterval(() => {
+    timer++;
+    timeEl.textContent = timer;
+  }, 1000);
 });
-function finishGame() {
-  clearInterval(timer);
+
+// Reset test
+resetBtn.addEventListener("click", () => {
+  clearInterval(interval);
+  isTestRunning = false;
   inputEl.disabled = true;
-  quoteEl.textContent = "Time Over! Your WPM: " + wpmEl.textContent;
-}
-startBtn.addEventListener("click", startGame);
-restartBtn.addEventListener("click", () => {
-  resetGame();
-  loadQuote();
+  quoteEl.textContent = "Click 'Start Test' to begin!";
+  inputEl.value = "";
+  timeEl.textContent = 0;
+  wpmEl.textContent = 0;
+  accuracyEl.textContent = 0;
 });
+
+// Typing check
+inputEl.addEventListener("input", () => {
+  const typedText = inputEl.value;
+  
+  // Accuracy
+  let correctChars = 0;
+  for (let i = 0; i < typedText.length; i++) {
+    if (typedText[i] === currentQuote[i]) correctChars++;
+  }
+  let accuracy = Math.floor((correctChars / typedText.length) * 100);
+  accuracyEl.textContent = isNaN(accuracy) ? 0 : accuracy;
+  
+  // WPM
+  const wordsTyped = typedText.trim().split(" ").length;
+  let wpm = Math.floor((wordsTyped / timer) * 60);
+  wpmEl.textContent = isNaN(wpm) ? 0 : wpm;
+  
+  // Finish test
+  if (typedText === currentQuote) {
+    clearInterval(interval);
+    isTestRunning = false;
+    inputEl.disabled = true;
+  }
+});
+
+
 
 
